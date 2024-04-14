@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:word_generator/word_generator.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -11,6 +14,42 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
+  FlutterTts flutterTts = FlutterTts();
+  bool _playedTTS = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFlutterTTS();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    flutterTts.stop();
+  }
+
+  _initFlutterTTS() {
+    if (Platform.isIOS) {
+      flutterTts.setSharedInstance(true);
+      flutterTts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.ambient,
+          [
+            IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+            IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers
+          ],
+          IosTextToSpeechAudioMode.voicePrompt);
+    }
+
+    flutterTts.awaitSpeakCompletion(true);
+    flutterTts.awaitSynthCompletion(true);
+    flutterTts.setLanguage("en-US");
+
+    flutterTts.setSpeechRate(0.5);
+
+    flutterTts.setVolume(1.0);
+  }
 
   final List<MessageModel> _messages = [
     MessageModel("Hello there! How can I help you!!", false),
@@ -23,7 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String randomSentence = wordGenerator.randomSentence(10);
     print("Random sentence: $randomSentence");
     _messages.insert(0, MessageModel(randomSentence, false));
-
+    _playedTTS = false;
     setState(() {});
     return;
   }
@@ -31,6 +70,13 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     var border = const OutlineInputBorder();
+
+    if (!_playedTTS) {
+      if (!_messages[0].byUser) {
+        flutterTts.speak(_messages[0].message);
+      }
+      _playedTTS = true;
+    }
     return LayoutBuilder(builder: (context, constraints) {
       double screenWidth = constraints.maxWidth;
       return Scaffold(

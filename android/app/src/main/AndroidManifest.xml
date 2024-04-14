@@ -41,4 +41,11 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+
+<!--    https://pub.dev/packages/flutter_tts-->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 </manifest>
